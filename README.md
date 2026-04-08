@@ -1,185 +1,299 @@
-# Park-And-Ride made by Radioactives
-1. 📌 Introduction
+# Park & Ride: Smart Parking and Last-Mile Connectivity
 
-The Park and Ride System is a smart urban mobility solution designed to reduce traffic congestion and improve commuting efficiency. It combines parking reservation + last-mile transportation services into a single platform.
+---
 
-The system allows users to:
+## Overview
 
-Book parking spaces near metro stations
-Travel via metro
-Book rides (cab/shuttle) to reach final destination
+Park & Ride is a smart urban mobility solution that integrates parking reservation systems with last-mile transportation services. It enables users to reserve parking spaces in advance and seamlessly continue their journey using cabs, shuttles, or other transport options.
 
-👉 Goal: Reduce parking chaos + improve last-mile connectivity
+---
 
-2. 🎯 Objectives
-Minimize parking congestion near metro stations
-Provide seamless travel experience
-Optimize parking utilization
-Reduce traffic and pollution
-Improve commuter convenience
-3. 🏗️ System Architecture (High-Level)
-User (Mobile/Web App)
+## Objectives
+
+- Reduce traffic congestion  
+- Optimize parking utilization  
+- Improve commuter convenience  
+- Enable seamless multimodal transportation  
+
+---
+
+## Problem Statement
+
+Urban transportation systems face several challenges:
+
+- Limited and unpredictable parking availability  
+- Inefficient last-mile connectivity  
+- Increased travel time and congestion  
+
+### Proposed Solution
+
+A unified platform that provides:
+
+- Real-time parking booking  
+- Smart slot allocation  
+- Integrated ride services  
+
+---
+
+## Tech Stack
+
+| Layer        | Technology              |
+|--------------|------------------------|
+| Frontend     | React.js               |
+| Backend      | Node.js, Express.js    |
+| Database     | MongoDB                |
+| Authentication | JWT (JSON Web Tokens) |
+| APIs         | RESTful APIs           |
+| Realtime     | Socket.io              |
+| Caching      | Redis (Optional)       |
+| Maps         | Google Maps API        |
+
+---
+
+## System Architecture
+
+```text
+User
+  |
+  v
+Frontend (React.js)
+  |
+  v
+Backend (Node.js + Express.js)
+  |
+  v
+Database (MongoDB)
+  |
+  v
+Response to Client
+System Workflows
+Parking Booking Workflow
+User Login or Registration
         |
         v
- Application Layer (Frontend UI)
+Search Parking Location
         |
         v
- Backend Server (APIs, Logic)
+Check Slot Availability
         |
-  -----------------------------
-  |            |             |
-Parking DB   Ride DB     User DB
+        +---- No ----> Display "No Slots Available"
+        |
+        v
+Select Slot
+        |
+        v
+Make Payment
+        |
+        v
+Booking Confirmation
+        |
+        v
+QR Code Generation
+Last-Mile Ride Workflow
+Exit Transit Station
+        |
+        v
+Select Ride Type (Cab / Shuttle)
+        |
+        v
+View Available Options
+        |
+        v
+Confirm Booking
+        |
+        v
+Track Ride
+        |
+        v
+Ride Completion
+Slot Availability and Allocation
+Sensor or System Input
+        |
+        v
+Update Database
+        |
+        v
+Check Slot Status
+        |
+        +---- Occupied ----> Skip
+        |
+        v
+Allocate Slot
+        |
+        v
+Notify User
+Flowchart
+Start
+  |
+  v
+User Login
+  |
+  v
+Search Parking
+  |
+  v
+Slots Available?
   |            |
- IoT Sensors   Cab APIs
- (Parking)     (3rd Party)
+ Yes           No
+  |            |
+  v            v
+Select Slot   Show Message
+  |
+  v
+Make Payment
+  |
+  v
+Generate QR Code
+  |
+  v
+End
+Class Diagram
+User
+- userId
+- name
+- email
+- password
++ register()
++ login()
 
-👉 Explanation:
+Booking
+- bookingId
+- userId
+- slotId
+- time
++ createBooking()
++ cancelBooking()
 
-User interacts via app
-Backend handles booking, pricing, allocation
-Database stores parking & ride data
-IoT sensors track real-time parking
-4. 🔑 Core Modules
-4.1 🚗 Parking Booking System
-Search parking near metro
-Book slot (hourly/daily/monthly)
-QR-based entry
+ParkingSlot
+- slotId
+- status
+- location
++ allocateSlot()
++ releaseSlot()
 
-Features:
+Ride
+- rideId
+- type
+- fare
++ bookRide()
++ cancelRide()
+Pseudocode
+Parking Booking
+function bookParking(user, location):
+    slots = getAvailableSlots(location)
 
+    if slots is empty:
+        return "No Slots Available"
+
+    selectedSlot = chooseSlot(slots)
+    paymentStatus = processPayment(user)
+
+    if paymentStatus == success:
+        reserveSlot(selectedSlot)
+        generateQR(user)
+        return "Booking Confirmed"
+    else:
+        return "Payment Failed"
+Slot Allocation
+function allocateSlot():
+    slots = fetchAllSlots()
+
+    for slot in slots:
+        if slot.status == FREE:
+            assign slot to user
+            mark slot as OCCUPIED
+            break
+Ride Booking
+function bookRide(user, type):
+    rides = getAvailableRides(type)
+
+    selectedRide = chooseRide(rides)
+    confirmBooking(selectedRide)
+
+    return "Ride Booked"
+Key Features
+Parking System
+Advance parking reservation
 Smart slot allocation
-Cancellation & refund
-RFID/LPR entry system
-
-👉 Outcome: No last-minute parking stress
-
-4.2 🚕 Last-Mile Connectivity
-Cab / Shuttle / E-rickshaw booking
-Real-time ride suggestions
-
-Features:
-
+QR-based entry
+Flexible cancellation and modification
+Last-Mile Connectivity
+Multi-modal ride booking
 Ride pooling
-Scheduled rides
-Metro integration
+Real-time tracking
+Smart System Features
+Dynamic pricing
+Real-time availability updates
+AI-based optimization (future scope)
+Offline Mode
+Access bookings without internet
+QR code functionality offline
+Automatic synchronization on reconnection
+System Design Considerations
+Scalability
+Designed for horizontal scaling
+Supports microservices architecture
+Performance
+Caching for frequently accessed data
+Optimized database queries
+Fault Tolerance
+Backup and recovery mechanisms
+Graceful error handling
+Security
+JWT-based authentication
+Secure API communication
+Complexity Analysis
+Operation	Complexity
+Search Slots	O(n)
+Booking	O(1)
+Slot Allocation	O(n)
+Ride Matching	O(n log n)
+Trade-offs
+Decision	Trade-off
+Real-time updates	Increased server load
+Dynamic pricing	Possible user dissatisfaction
+Caching	Risk of stale data
+Project Structure
+Park-and-Ride/
+│
+├── client/         # React frontend
+├── server/         # Node.js backend
+├── models/         # Database schemas
+├── routes/         # API routes
+├── controllers/    # Business logic
+├── config/         # Configuration files
+├── package.json
+Installation and Setup
+# Clone repository
+git clone https://github.com/your-username/park-and-ride.git
 
-👉 Outcome: Smooth travel from metro to destination
+# Install frontend dependencies
+cd client
+npm install
 
-4.3 ⚙️ Availability Conflict Resolution
-Prevents double booking
+# Install backend dependencies
+cd ../server
+npm install
 
-Tech Used:
+# Run application
+npm run dev
+Demonstration
 
-Real-time updates
-Auto slot release (no-show users)
-Dynamic reassignment
+Add screenshots or a demo video link here.
 
-👉 Outcome: Fair and efficient allocation
+Contributing
 
-4.4 💰 Dynamic Pricing System
-Price varies based on demand
+To contribute:
 
-Factors:
+Fork the repository
+Create a new branch
+Make your changes
+Commit and push
+Create a pull request
+License
 
-Peak hours
-Traffic
-Weather
+This project is licensed under the MIT License.
 
-👉 Outcome: Balanced demand + increased revenue
+Conclusion
 
-4.5 📡 Offline Mode Handling
-Works without internet
-
-Features:
-
-Offline QR access
-Stored maps
-Auto-sync
-
-👉 Outcome: No interruption in basements/metro areas
-
-5. 🔐 Authentication System
-Secure login/signup
-Token-based authentication (JWT recommended)
-
-👉 Ensures:
-
-Data security
-User privacy
-6. 🧠 Algorithms & Optimization
-Used Concepts:
-Greedy (slot allocation)
-Hashing (fast lookup)
-Priority Queue (best slot selection)
-Caching (frequent queries)
-
-👉 Time Complexity:
-
-Slot search → O(log n) (with priority queue)
-Booking → O(1)
-
-👉 Space Complexity:
-
-Depends on number of users & slots → O(n)
-7. ⚠️ Failure Handling
-
-System handles:
-
-Server crash → backup recovery
-Network failure → offline mode
-Payment failure → retry mechanism
-
-👉 Ensures reliability
-
-8. 📊 System Monitoring
-Logs for errors
-Real-time dashboards
-Performance tracking
-
-👉 Helps in debugging & scaling
-
-9. ⚖️ Trade-offs
-Factor	Trade-off
-Performance	Caching vs Memory usage
-Accuracy	Real-time updates vs latency
-Cost	IoT sensors vs manual system
-10. 🧩 Tech Stack (Suggested)
-Frontend: HTML, CSS, JS / React
-Backend: Node.js / Python
-Database: MySQL / MongoDB
-APIs: Maps, Payment Gateway
-Hardware: IoT sensors, RFID
-11. 📈 Use Case Diagram
-        +----------------+
-        |     User       |
-        +----------------+
-          |   |   |   |
-          v   v   v   v
-   Book Parking  Book Ride
-   Cancel Booking View Slots
-12. 🔄 Workflow Diagram
-User → Search Parking → Select Slot → Payment → QR Generated
-   ↓
-Arrive → Scan QR → Park Vehicle → Use Metro
-   ↓
-Exit Metro → Book Ride → Reach Destination
-13. 🧪 Testing Strategy
-Unit Testing (functions)
-Integration Testing (modules)
-Edge Cases:
-No slots available
-Payment failure
-Network loss
-14. 📹 Demo Requirements
-Show booking flow
-QR entry simulation
-Ride booking
-UI screenshots
-15. 🚀 Future Enhancements
-AI-based prediction of parking demand
-Voice assistant integration
-EV charging slot booking
-Smart traffic analytics
-16. 📌 Conclusion
-
-The Park and Ride system provides a complete smart commuting solution by combining parking and transportation. It improves urban mobility, reduces congestion, and enhances user experience.
+Park & Ride provides a scalable and efficient solution for modern urban mobility challenges by integrating smart parking with seamless last-mile connectivity. It enhances user experience, optimizes resource utilization, and contributes to reducing traffic congestion.
