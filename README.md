@@ -66,8 +66,10 @@ Database (MongoDB)
   |
   v
 Response to Client
-System Workflows
-Parking Booking Workflow
+```
+### System Workflows
+#### Parking Booking Workflow
+```text
 User Login or Registration
         |
         v
@@ -89,7 +91,9 @@ Booking Confirmation
         |
         v
 QR Code Generation
-Last-Mile Ride Workflow
+```
+### Last-Mile Ride Workflow
+```text
 Exit Transit Station
         |
         v
@@ -106,7 +110,9 @@ Track Ride
         |
         v
 Ride Completion
-Slot Availability and Allocation
+```
+### Slot Availability and Allocation
+```text
 Sensor or System Input
         |
         v
@@ -122,7 +128,9 @@ Allocate Slot
         |
         v
 Notify User
-Flowchart
+```
+### Flowchart
+```text
 Start
   |
   v
@@ -147,7 +155,8 @@ Generate QR Code
   |
   v
 End
-Class Diagram
+```
+### Class Diagram
 User
 - userId
 - name
@@ -177,8 +186,12 @@ Ride
 - fare
 + bookRide()
 + cancelRide()
-Pseudocode
-Parking Booking
+
+# Pseudocode
+##  Core Functionalities
+
+###  Parking Booking
+```pseudo
 function bookParking(user, location):
     slots = getAvailableSlots(location)
 
@@ -194,80 +207,14 @@ function bookParking(user, location):
         return "Booking Confirmed"
     else:
         return "Payment Failed"
-Slot Allocation
-function allocateSlot():
-    slots = fetchAllSlots()
-
-    for slot in slots:
-        if slot.status == FREE:
-            assign slot to user
-            mark slot as OCCUPIED
-            break
-Ride Booking
-function bookRide(user, type):
-    rides = getAvailableRides(type)
-
-    selectedRide = chooseRide(rides)
-    confirmBooking(selectedRide)
-
-    return "Ride Booked"
-Key Features
-Parking System
-Advance parking reservation
-Smart slot allocation
-QR-based entry
-Flexible cancellation and modification
-Last-Mile Connectivity
-Multi-modal ride booking
-Ride pooling
-Real-time tracking
-Smart System Features
-Dynamic pricing
-Real-time availability updates
-AI-based optimization (future scope)
-Offline Mode
-Access bookings without internet
-QR code functionality offline
-Automatic synchronization on reconnection
-System Design Considerations
-Scalability
-Designed for horizontal scaling
-Supports microservices architecture
-Performance
-Caching for frequently accessed data
-Optimized database queries
-Fault Tolerance
-Backup and recovery mechanisms
-Graceful error handling
-Security
-JWT-based authentication
-Secure API communication
-Complexity Analysis
-Operation	Complexity
-Search Slots	O(n)
-Booking	O(1)
-Slot Allocation	O(n)
-Ride Matching	O(n log n)
-Trade-offs
-Decision	Trade-off
-Real-time updates	Increased server load
-Dynamic pricing	Possible user dissatisfaction
-Caching	Risk of stale data
-Project Structure
-Park-and-Ride/
-│
-├── client/         # React frontend
-├── server/         # Node.js backend
-├── models/         # Database schemas
-├── routes/         # API routes
-├── controllers/    # Business logic
-├── config/         # Configuration files
-├── package.json
-Installation and Setup
+```
 # Clone repository
+```pseudo
 git clone https://github.com/your-username/park-and-ride.git
+```
 
 # Install frontend dependencies
+```bash
 cd client
 npm install
 
@@ -278,14 +225,9 @@ npm install
 # Run application
 npm run dev
 Demonstration
+```
 
-Add screenshots or a demo video link here.
-
-Contributing
-
-To contribute:
-
-Fork the repository
+### Fork the repository
 Create a new branch
 Make your changes
 Commit and push
