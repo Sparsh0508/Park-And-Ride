@@ -1,3 +1,5 @@
+
+
 export function updatePrice(parking) {
     let occupied = parking.totalSlots - parking.availableSlots;
     let ratio = occupied / parking.totalSlots;

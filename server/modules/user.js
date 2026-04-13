@@ -25,11 +25,11 @@ const userSchema = new mongoose.Schema({
         default: 'user'
     },
     
-    bookings: [{
+    Bookings: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'booking'
     }]
 
 }, { timestamps: true });
 
-module.exports = mongoose.model('User', userSchema);
+export default mongoose.model("User", userSchema);

@@ -35,13 +35,11 @@ const bookingSchema = new mongoose.Schema({
         default: false
     },
 
-    priceAtBooking: {   // 🔥 IMPORTANT (lock price)
+    priceAtBooking: {   
         type: Number,
         required: true
     }
 
 }, { timestamps: true });
 
-const Booking = mongoose.model('Booking', bookingSchema);
-
-export default Booking;
+export default mongoose.model("Booking", bookingSchema);
