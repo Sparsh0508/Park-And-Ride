@@ -1,5 +1,5 @@
 # Park & Ride: Smart Parking and Last-Mile Connectivity
-
+ ..
 ---
 
 ## Overview
@@ -68,6 +68,8 @@ Database (MongoDB)
 Response to Client
 ```
 ### System Workflows
+![WhatsApp Image 2026-04-14 at 11 11 27 AM](https://github.com/user-attachments/assets/cd999175-1a81-496f-91e0-2e112a6ea570)
+
 #### Parking Booking Workflow
 ```text
 User Login or Registration
