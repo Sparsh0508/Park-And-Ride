@@ -1,6 +1,6 @@
 import cron from 'node-cron';
-import Booking from '../models/booking.js';
-import Parking from '../models/parking.js';
+import Booking from '../modules/booking.js';
+import Parking from '../modules/parking.js';
 import { updatePrice } from '../services/pricingService.js';
 
 cron.schedule('*/5 * * * *', async () => {
