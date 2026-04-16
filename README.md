@@ -1,6 +1,6 @@
-# Park & Ride: Smart Parking and Last-Mile Connectivity
+# Park & Ride
 
----
+Park & Ride is a smart mobility platform that combines parking reservation with last-mile commute support. This repository currently contains a React frontend and a Node.js/Express backend with MongoDB models for users, parking inventory, and bookings.
 
 ## Overview
 
@@ -66,13 +66,13 @@ The system follows a layered client-server architecture:
 ```mermaid
 flowchart TD
     U[User]
-    C[React Client\nLanding / Auth / Dashboard\nParking / Booking / Rides]
-    B[Express Backend\nRoutes / Controllers\nPricing Service / Auth Token Utility]
-    D[(MongoDB\nusers\nparkings\nbookings)]
-    W[Cron Workers\nauto-cancel / no-show]
+    C[React Client Landing / Auth / Dashboard Parking / Booking / Rides]
+    B[Express Backend Routes / Controllers Pricing Service / Auth Token Utility]
+    D[(MongoDB users parkings bookings)]
+    W[Cron Workers auto-cancel / no-show]
 
     U --> C
-    C -->|HTTPS + JSON + Cookie auth| B
+    C -->|HTTPS + JSON + auth| B
     B -->|Mongoose| D
     W -->|scheduled evaluation| D
 ```
@@ -116,10 +116,10 @@ flowchart LR
 ```mermaid
 flowchart TD
     U[User]
-    C[React Client\nLanding / Auth / Dashboard\nParking / Booking / Rides]
-    B[Express Backend\nRoutes / Controllers\nPricing Service / Auth Token Utility]
-    D[(MongoDB\nusers\nparkings\nbookings)]
-    W[Cron Workers\nauto-cancel / no-show]
+    C[React Client Landing / Auth / Dashboard Parking / Booking / Rides]
+    B[Express Backend Routes / Controllers Pricing Service / Auth Token Utility]
+    D[(MongoDB users parkings bookings)]
+    W[Cron Workers auto-cancel / no-show]
 
     U --> C
     C -->|HTTPS + JSON + Cookie auth| B
@@ -256,107 +256,477 @@ Responsibilities:
 
 Responsibilities:
 
-- Real-time parking booking  
-- Smart slot allocation  
-- Integrated ride services  
+- capture pickup/drop data
+- present ride options
+- simulate booking and tracking lifecycle
 
----
+#### Booking Management Module
 
-## Tech Stack
+- `client/src/pages/dashboard/BookingsPage.jsx`
+  Lists all bookings with tabs, search, and cancellation.
+- `client/src/components/bookings/BookingCard.jsx`
+  Individual booking card with actions and status presentation.
 
-| Layer        | Technology              |
-|--------------|------------------------|
-| Frontend     | React.js               |
-| Backend      | Node.js, Express.js    |
-| Database     | MongoDB                |
-| Authentication | JWT (JSON Web Tokens) |
-| APIs         | RESTful APIs           |
-| Realtime     | Socket.io              |
-| Caching      | Redis (Optional)       |
-| Maps         | Google Maps API        |
+Responsibilities:
 
----
+- filter by status
+- search by booking ID or location
+- update UI state when a booking is cancelled
 
-## System Architecture
+#### Profile Module
 
-```text
-User
-  |
-  v
-Frontend (React.js)
-  |
-  v
-Backend (Node.js + Express.js)
-  |
-  v
-Database (MongoDB)
-  |
-  v
-Response to Client
+- `client/src/pages/dashboard/ProfilePage.jsx`
+  Displays personal info, notification settings, and payment methods.
+
+Responsibilities:
+
+- edit profile details
+- manage user preferences
+- show lightweight account stats
+
+### Backend Components
+
+#### Server Bootstrap
+
+- `server/app.js`
+  Loads environment variables, establishes MongoDB connection, configures middleware, and mounts route modules.
+- `server/server.js`
+  Exists in the repo, but `app.js` is the active server bootstrap currently used.
+- `server/config/db.js`
+  Connects Mongoose to `MONGO_URI` and terminates startup on DB failure.
+
+#### Routing Layer
+
+- `server/routes/authRoutes.js`
+  Exposes:
+  - `POST /api/auth/signup`
+  - `POST /api/auth/login`
+  - `POST /api/auth/logout`
+
+#### Controller Layer
+
+- `server/controller/authController.js`
+  Implements:
+  - user creation with password hashing
+  - credential validation with bcrypt
+  - JWT generation and HTTP-only cookie creation
+  - cookie invalidation on logout
+
+#### Domain Models
+
+- `server/modules/user.js`
+  Stores user identity, role, and booking references.
+- `server/modules/parking.js`
+  Stores parking lot metadata, capacity, and pricing state.
+- `server/modules/booking.js`
+  Stores reservation ownership, parking reference, timing, status, check-in state, and booking price snapshot.
+
+#### Business Services
+
+- `server/services/pricingService.js`
+  Calculates `currentPricePerHour` from occupancy:
+  - occupancy ratio `< 0.4` -> `1.0x base price`
+  - occupancy ratio `< 0.7` -> `1.5x base price`
+  - occupancy ratio `< 0.9` -> `2.0x base price`
+  - occupancy ratio `>= 0.9` -> `3.0x base price`
+
+#### Scheduled Jobs
+
+- `server/corn/autoCancelBookings.js`
+  Designed to run every 5 minutes, convert missed reservations to `no-show`, free capacity, and refresh dynamic pricing.
+
+Note:
+
+- The cron import is currently commented out in `server/app.js`.
+- The cron file imports from `../models/...` while the current repo stores schemas in `server/modules/...`; that should be aligned before enabling the job.
+
+## Component Interaction Design
+
+### Parking Booking Interaction
+
+```mermaid
+flowchart LR
+    PP[ParkingPage] --> SEL[User selects parking]
+    SEL --> BP[BookingPage loads selected parking context]
+    BP --> DT[User chooses slot, date, and time]
+    DT --> CALC[Booking amount calculated in UI]
+    CALC --> API[Booking API persists reservation]
+    API --> MB[Booking appears in BookingsPage]
 ```
-### System Workflows
-#### Parking Booking Workflow
-```text
-User Login or Registration
-        |
-        v
-Search Parking Location
-        |
-        v
-Check Slot Availability
-        |
-        +---- No ----> Display "No Slots Available"
-        |
-        v
-Select Slot
-        |
-        v
-Make Payment
-        |
-        v
-Booking Confirmation
-        |
-        v
-QR Code Generation
+
+### Auth Interaction
+
+```mermaid
+flowchart LR
+    LP[LoginPage / RegisterPage] --> AC[AuthContext]
+    AC --> AR[Backend auth route]
+    AR --> JP[JWT cookie + user payload]
+    JP --> PR[ProtectedRoute grants dashboard access]
 ```
-### Last-Mile Ride Workflow
-```text
-Exit Transit Station
-        |
-        v
-Select Ride Type (Cab / Shuttle)
-        |
-        v
-View Available Options
-        |
-        v
-Confirm Booking
-        |
-        v
-Track Ride
-        |
-        v
-Ride Completion
+
+### Operational Data Dependencies
+
+```mermaid
+flowchart TD
+    B[Booking]
+    P[Parking price]
+    N[No-show logic]
+
+    U[Valid User] --> B
+    PE[Valid Parking entry] --> B
+    SA[Slot availability] --> B
+    EP[Effective price at booking time] --> B
+
+    TS[totalSlots] --> P
+    AS[availableSlots] --> P
+
+    BS[booking status] --> N
+    CI[checkedIn flag] --> N
+    ST[startTime + grace window] --> N
 ```
-### Slot Availability and Allocation
-```text
-Sensor or System Input
-        |
-        v
-Update Database
-        |
-        v
-Check Slot Status
-        |
-        +---- Occupied ----> Skip
-        |
-        v
-Allocate Slot
-        |
-        v
-Notify User
+
+## API Contracts
+
+The following contracts are split into two groups:
+
+- `Implemented`: already present in backend routes
+- `Recommended`: needed to fully support the current frontend and domain model
+
+### Common Response Shape
+
+Recommended standard response wrapper:
+
+```json
+{
+  "success": true,
+  "message": "Human readable message",
+  "data": {}
+}
 ```
-### Flowchart
+
+### 1. Authentication APIs
+
+#### `POST /api/auth/signup`  `Implemented`
+
+Request:
+
+```json
+{
+  "name": "Vatsal Agarwal",
+  "email": "vatsal@example.com",
+  "password": "securePassword123"
+}
+```
+
+Current response:
+
+```json
+{
+  "msg": "Signup success"
+}
+```
+
+Behavior:
+
+- checks if email already exists
+- hashes password with bcrypt
+- creates user
+- sets `token` HTTP-only cookie
+
+#### `POST /api/auth/login`  `Implemented`
+
+Request:
+
+```json
+{
+  "email": "vatsal@example.com",
+  "password": "securePassword123"
+}
+```
+
+Current response:
+
+```json
+{
+  "msg": "Login success"
+}
+```
+
+Failure response:
+
+```json
+{
+  "msg": "Invalid credentials"
+}
+```
+
+#### `POST /api/auth/logout`  `Implemented`
+
+Request:
+
+```json
+{}
+```
+
+Current response:
+
+```json
+{
+  "msg": "Logout successful"
+}
+```
+
+### 2. Parking APIs
+
+#### `GET /api/parkings`  `Recommended`
+
+Purpose:
+
+- fetch parking list for `ParkingPage`
+- support text and filter-based discovery
+
+Query params:
+
+- `search`
+- `minPrice`
+- `maxPrice`
+- `maxDistance`
+- `availableOnly`
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "661df8b7c9c0a9a0fd5d0101",
+      "name": "Central Plaza Parking",
+      "location": "123 Main Street, Downtown",
+      "totalSlots": 20,
+      "availableSlots": 12,
+      "basePricePerHour": 50,
+      "currentPricePerHour": 75,
+      "isFull": false
+    }
+  ]
+}
+```
+
+#### `GET /api/parkings/:parkingId`  `Recommended`
+
+Purpose:
+
+- fetch full details for one parking location
+- used by booking flow
+
+#### `PATCH /api/parkings/:parkingId/availability`  `Recommended`
+
+Purpose:
+
+- internal/admin endpoint to sync available slots and `isFull`
+- optionally trigger price recalculation
+
+Request:
+
+```json
+{
+  "availableSlots": 9
+}
+```
+
+### 3. Booking APIs
+
+#### `POST /api/bookings`  `Recommended`
+
+Purpose:
+
+- create a parking booking
+
+Request:
+
+```json
+{
+  "parkingId": "661df8b7c9c0a9a0fd5d0101",
+  "startTime": "2026-04-16T09:00:00.000Z",
+  "endTime": "2026-04-16T11:00:00.000Z"
+}
+```
+
+Expected processing:
+
+- authenticate user
+- verify parking exists
+- verify `availableSlots > 0`
+- compute effective price from parking
+- create booking with `status=booked`
+- decrement parking availability
+- recalculate `currentPricePerHour`
+- attach booking reference to user
+
+Response:
+
+```json
+{
+  "success": true,
+  "message": "Booking created successfully",
+  "data": {
+    "bookingId": "661df95cc9c0a9a0fd5d0201",
+    "status": "booked",
+    "priceAtBooking": 150
+  }
+}
+```
+
+#### `GET /api/bookings/me`  `Recommended`
+
+Purpose:
+
+- fetch bookings for logged-in user
+- used by `BookingsPage`
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "661df95cc9c0a9a0fd5d0201",
+      "status": "booked",
+      "checkedIn": false,
+      "startTime": "2026-04-16T09:00:00.000Z",
+      "endTime": "2026-04-16T11:00:00.000Z",
+      "priceAtBooking": 150,
+      "parking": {
+        "_id": "661df8b7c9c0a9a0fd5d0101",
+        "name": "Central Plaza Parking",
+        "location": "123 Main Street, Downtown"
+      }
+    }
+  ]
+}
+```
+
+#### `PATCH /api/bookings/:bookingId/cancel`  `Recommended`
+
+Purpose:
+
+- cancel upcoming booking
+- restore capacity and reprice parking
+
+Response:
+
+```json
+{
+  "success": true,
+  "message": "Booking cancelled successfully"
+}
+```
+
+#### `PATCH /api/bookings/:bookingId/checkin`  `Recommended`
+
+Purpose:
+
+- mark a booking as checked in before grace window expires
+
+Request:
+
+```json
+{
+  "checkedIn": true
+}
+```
+
+### 4. User/Profile APIs
+
+#### `GET /api/users/me`  `Recommended`
+
+Purpose:
+
+- fetch profile details for `ProfilePage`
+
+#### `PATCH /api/users/me`  `Recommended`
+
+Purpose:
+
+- update name, phone, avatar, notification preferences
+
+Example request:
+
+```json
+{
+  "name": "Vatsal Agarwal",
+  "phone": "+91 9876543210"
+}
+```
+
+### 5. Ride APIs
+
+Ride booking is only mocked in the frontend today. If this feature is persisted later, add:
+
+- `GET /api/rides/types`
+- `POST /api/rides`
+- `GET /api/rides/:rideId`
+- `PATCH /api/rides/:rideId/cancel`
+
+## Database Models
+
+### 1. User Model
+
+Source: `server/modules/user.js`
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| `name` | `String` | required, trimmed | display name |
+| `email` | `String` | required, unique, lowercase | login identity |
+| `password` | `String` | required | bcrypt hash |
+| `role` | `String` | enum: `user`, `admin` | authorization role |
+| `Bookings` | `ObjectId[]` | refs `booking` | linked user bookings |
+| `createdAt` | `Date` | auto | timestamp |
+| `updatedAt` | `Date` | auto | timestamp |
+
+Observations:
+
+- `Bookings` is capitalized, which is uncommon in Mongo schemas; `bookings` would be more idiomatic.
+- The ref value uses lowercase `'booking'`, while the booking model is exported as `"Booking"`. These should be aligned.
+
+### 2. Parking Model
+
+Source: `server/modules/parking.js`
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| `name` | `String` | required | parking name |
+| `location` | `String` | required | physical address or area |
+| `totalSlots` | `Number` | required | total inventory |
+| `availableSlots` | `Number` | required | free inventory |
+| `basePricePerHour` | `Number` | required | base tariff |
+| `currentPricePerHour` | `Number` | optional | dynamic tariff |
+| `isFull` | `Boolean` | default `false` | quick availability flag |
+| `createdAt` | `Date` | auto | timestamp |
+| `updatedAt` | `Date` | auto | timestamp |
+
+### 3. Booking Model
+
+Source: `server/modules/booking.js`
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| `user` | `ObjectId` | required, ref `User` | booking owner |
+| `parking` | `ObjectId` | required, ref `Parking` | booked parking |
+| `startTime` | `Date` | required | booking start |
+| `endTime` | `Date` | required | booking end |
+| `status` | `String` | enum: `booked`, `cancelled`, `completed`, `no-show` | lifecycle state |
+| `checkedIn` | `Boolean` | default `false` | arrival tracking |
+| `priceAtBooking` | `Number` | required | immutable price snapshot |
+| `createdAt` | `Date` | auto | timestamp |
+| `updatedAt` | `Date` | auto | timestamp |
+
+## Database Schema Design
+
+### MongoDB Collections
+
 ```text
 users
 parkings
